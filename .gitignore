@@ -1,0 +1,9 @@
+*.swp
+*.pyc
+*.log
+.*.swo
+venv
+.tox
+.cache
+build
+dist

@@ -1,0 +1,5 @@
+twine
+pytest
+tox
+httmock
+pytest-mock
