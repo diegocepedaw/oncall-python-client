@@ -10,7 +10,7 @@ import time
 import requests
 
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 
 class OncallAuth(requests.auth.AuthBase):
@@ -50,6 +50,14 @@ class OncallClient(requests.Session):
         except:
             raise ValueError('Failed to decode json: %s' % r.text)
 
+    def get_user_teams(self, username):
+        r = self.get(self.url + 'users/%s/teams' % username)
+        r.raise_for_status()
+        try:
+            return r.json()
+        except:
+            raise ValueError('Failed to decode json: %s' % r.text)
+
     def get_team(self, team):
         r = self.get(self.url + 'teams/%s' % team)
         r.raise_for_status()
@@ -58,13 +66,58 @@ class OncallClient(requests.Session):
         except:
             raise ValueError('Failed to decode json: %s' % r.text)
 
-    def get_oncall_now(self, team, role=None):
-        if role == None:
-            roles = ''
-        else:
-            roles = '/%s' % role
-        r = self.get(self.url + 'teams/%s/oncall%s' % (team, roles))
+    def all_teams(self, team):
+        r = self.get(self.url + 'teams')
+        r.raise_for_status()
         try:
             return r.json()
         except:
             raise ValueError('Failed to decode json: %s' % r.text)
+
+    def get_oncall_now(self, team, role=None):
+        if role is None:
+            roles = ''
+        else:
+            roles = '/%s' % role
+        r = self.get(self.url + 'teams/%s/oncall%s' % (team, roles))
+        r.raise_for_status()
+        try:
+            return r.json()
+        except:
+            raise ValueError('Failed to decode json: %s' % r.text)
+
+    def get_events(self, **kwargs):
+        kwargs = {k: v for k, v in kwargs.items() if v is not None}
+        r = self.get(self.url + 'events', params=kwargs)
+        r.raise_for_status()
+        try:
+            return r.json()
+        except:
+            raise ValueError('Failed to decode json: %s' % r.text)
+
+    def all_roles(self):
+        r = self.get(self.url + 'roles')
+        r.raise_for_status()
+        try:
+            return r.json()
+        except:
+            raise ValueError('Failed to decode json: %s' % r.text)
+
+    def get_audit(self, **kwargs):
+        kwargs = {k: v for k, v in kwargs.items() if v is not None}
+        r = self.get(self.url + 'audit', params=kwargs)
+        r.raise_for_status()
+        try:
+            return r.json()
+        except:
+            raise ValueError('Failed to decode json: %s' % r.text)
+
+    def get_suggestion(self, team, roster, role, start, end):
+        r = self.get(self.url + 'teams/%s/rosters/%s/%s/suggest?start=%s&end=%s' %
+                     (team, roster, role, start, end))
+        r.raise_for_status()
+        try:
+            return r.json()
+        except:
+            raise ValueError('Failed to decode json: %s' % r.text)
+
