@@ -1,0 +1,47 @@
+version: 2
+jobs:
+  test-2.7: &test-template
+    docker:
+      - image: circleci/python:2.7-jessie
+    working_directory: ~/oncall-client
+    steps:
+      - checkout
+      - run: sudo chown -R circleci:circleci /usr/local/bin
+      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
+      - restore_cache:  # ensure this step occurs *before* installing dependencies
+          key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+      - run:
+		  name: Set up pipenv
+          command: |
+            sudo pip install pipenv
+            pipenv install
+      - save_cache:
+          key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+          paths:
+            - ".venv"
+            - "/usr/local/bin"
+            - "/usr/local/lib/python3.6/site-packages"
+      - run: 
+          name: Run tests
+          command: pipenv run py.test -vvv ./tests
+  test-3.5:
+    <<: *test-template
+    docker:
+      - image: circleci/python:3.5-jessie
+  test-3.6:
+    <<: *test-template
+    docker:
+      - image: circleci/python:3.6-jessie
+  test-3.7:
+    <<: *test-template
+    docker:
+      - image: circleci/python:3.7-stretch
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - test-2.7
+#      - test-3.5
+#      - test-3.6
+#      - test-3.7

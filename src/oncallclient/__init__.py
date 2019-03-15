@@ -10,7 +10,7 @@ import time
 import requests
 
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 
 class OncallAuth(requests.auth.AuthBase):
@@ -24,12 +24,11 @@ class OncallAuth(requests.auth.AuthBase):
 
     def __call__(self, request):
         HMAC = self.HMAC.copy()
-        path = str(request.path_url)
-        method = str(request.method)
-        body = str(request.body or '')
-        window = str(int(time.time()) // 5)
-        content = '%s %s %s %s' % (window, method, path, body)
-        HMAC.update(content.encode('utf-8'))
+        path = request.path_url.encode('utf8')
+        method = request.method.encode('utf8')
+        body = request.body or b''
+        window = str(int(time.time()) // 5).encode('utf8')
+        HMAC.update(b'%s %s %s %s' % (window, method, path, body))
         digest = base64.urlsafe_b64encode(HMAC.digest())
         request.headers['Authorization'] = self.header + digest
         return request
@@ -120,4 +119,10 @@ class OncallClient(requests.Session):
             return r.json()
         except:
             raise ValueError('Failed to decode json: %s' % r.text)
+
+    def create_event(self, team, user, start, end, role):
+        event = {"team": team, "start": start, "end": end, "role": role, "user": user}
+        r = self.post(self.url + 'events', json=event)
+        r.raise_for_status()
+        return r.json()
 
